@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 import shutil
 import uuid
 import os
+from services.jwt_ser import hash_password
+from sqlalchemy.future import select
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -165,6 +167,33 @@ async def upload_image(
         shutil.copyfileobj(file.file, buffer)
         
     return {"image_url": f"/{file_path}"}
+
+
+@app.get("/init-admin")
+async def init_admin(db: AsyncSession = Depends(get_db)):
+    stmt = select(User).filter(User.username == "admin")
+    result = await db.execute(stmt)
+    admin_user = result.scalars().first()
+    
+    if admin_user:
+        return {"message": "Admin user already exists!", "email": "admin@example.com"}
+        
+    hashed = hash_password("admin123")
+    admin_user = User(
+        username="admin",
+        email="admin@example.com",
+        hashed_password=hashed,
+        is_admin=True,
+        is_active=True
+    )
+    db.add(admin_user)
+    await db.commit()
+    
+    return {
+        "message": "Admin user created successfully on Render!",
+        "email": "admin@example.com",
+        "password": "admin123"
+    }
 
 # Order routes
 @app.get("/orders/me")
