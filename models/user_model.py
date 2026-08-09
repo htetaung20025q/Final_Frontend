@@ -30,6 +30,7 @@ class Product(Base):
     price = Column(Integer)
     stock = Column(Integer)
     category_id = Column(Integer, index=True, nullable=True)
+    image_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -17,6 +17,7 @@ async def create(product_data: ProductCreate, db: AsyncSession):
         price=product_data.price,
         stock=product_data.stock,
         category_id=product_data.category_id,
+        image_url=product_data.image_url,
     )
     db.add(new_product)
     await db.commit()
@@ -28,7 +29,8 @@ async def create(product_data: ProductCreate, db: AsyncSession):
             "id": new_product.id,
             "name": new_product.name,
             "price": new_product.price,
-            "stock": new_product.stock
+            "stock": new_product.stock,
+            "image_url": new_product.image_url
         }
     }
 
@@ -49,6 +51,13 @@ async def get_products(category_id: int | None, min_price: int | None, max_price
     return products
 
 
+async def get_all_products(db: AsyncSession):
+    stmt = select(Product)
+    result = await db.execute(stmt)
+    products = result.scalars().all()
+    return products
+
+
 async def update(product_data: ProductUpdate, db: AsyncSession):
     stmt = select(Product).filter(Product.id == product_data.id)
     result = await db.execute(stmt)
@@ -62,6 +71,9 @@ async def update(product_data: ProductUpdate, db: AsyncSession):
         db_product.price = product_data.price
         db_product.stock = product_data.stock
         db_product.category_id = product_data.category_id
+        
+        if product_data.image_url is not None:
+            db_product.image_url = product_data.image_url
 
         await db.commit()
         await db.refresh(db_product)

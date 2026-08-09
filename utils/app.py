@@ -1,5 +1,9 @@
-from fastapi import Depends, HTTPException, status, FastAPI, Request, Query
+from fastapi import Depends, HTTPException, status, FastAPI, Request, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import shutil
+import uuid
+import os
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -28,7 +32,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://final-prj-onxi.onrender.com",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8080"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,6 +48,10 @@ app.add_middleware(
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+# Mount uploads directory for static file serving
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")
@@ -129,6 +142,28 @@ async def delete_product(
 ):
     return await product_service.delete(product_id, db)
 
+
+@app.get("/product/all")
+async def get_all_products(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser),
+):
+    return await product_service.get_all_products(db)
+
+
+@app.post("/product/upload-image")
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_superuser)
+):
+    file_ext = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4()}.{file_ext}"
+    file_path = f"uploads/{filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"image_url": f"/{file_path}"}
 
 # Order routes
 @app.get("/orders/me")

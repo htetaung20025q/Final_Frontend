@@ -4,7 +4,7 @@ import os
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql+asyncpg://htetagg:password123@localhost/finalproject"
+    "sqlite+aiosqlite:///./sql_app.db"
 )
 
 engine = create_async_engine(DATABASE_URL, echo=False)

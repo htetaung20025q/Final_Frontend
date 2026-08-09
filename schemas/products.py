@@ -8,6 +8,7 @@ class ProductBase(BaseModel):
     price: int
     stock: int
     category_id: Optional[int] = None
+    image_url: Optional[str] = None
 
 
 class ProductCreate(ProductBase):

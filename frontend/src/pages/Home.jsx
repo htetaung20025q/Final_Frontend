@@ -120,9 +120,12 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map(product => (
               <div key={product.id} className="card-hover flex flex-col h-full animate-slide-up">
-                <div className="aspect-square bg-slate-100 flex items-center justify-center p-6 relative group overflow-hidden">
-                   {/* Placeholder Image for Premium Look */}
-                   <img src={`https://picsum.photos/seed/${product.id}/400/400`} alt={product.name} className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500" />
+                 <div className="aspect-square bg-slate-100 flex items-center justify-center p-6 relative group overflow-hidden">
+                   {product.image_url ? (
+                     <img src={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}${product.image_url}`} alt={product.name} className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500" />
+                   ) : (
+                     <img src={`https://picsum.photos/seed/${product.id}/400/400`} alt={product.name} className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500" />
+                   )}
                    {product.stock <= 0 && (
                      <span className="absolute top-2 left-2 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded">Out of Stock</span>
                    )}

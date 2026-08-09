@@ -7,6 +7,7 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', description: '', price: '', stock: '', category_id: '' });
+  const [imageFile, setImageFile] = useState(null);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -27,14 +28,28 @@ const AdminProducts = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let image_url = null;
+      if (imageFile) {
+        const uploadData = new FormData();
+        uploadData.append('file', imageFile);
+        const uploadRes = await api.post('/product/upload-image', uploadData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        image_url = uploadRes.data.image_url;
+      }
+
       await api.post('/product/create', {
         ...formData,
         price: parseInt(formData.price),
         stock: parseInt(formData.stock),
-        category_id: formData.category_id ? parseInt(formData.category_id) : null
+        category_id: formData.category_id ? parseInt(formData.category_id) : null,
+        image_url: image_url
       });
       setShowModal(false);
       setFormData({ name: '', description: '', price: '', stock: '', category_id: '' });
+      setImageFile(null);
       fetchProducts();
     } catch (err) {
       console.error(err);
@@ -106,6 +121,7 @@ const AdminProducts = () => {
                 <input type="number" placeholder="Stock" required className="input-field flex-1" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} />
               </div>
               <input type="number" placeholder="Category ID (Optional)" className="input-field" value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})} />
+              <input type="file" accept="image/*" className="input-field bg-white" onChange={e => setImageFile(e.target.files[0])} />
               <div className="flex gap-4 mt-6">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
                 <button type="submit" className="btn-primary flex-1">Save</button>
